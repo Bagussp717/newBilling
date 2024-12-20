@@ -5,8 +5,15 @@
         "api/index.php": { "runtime": "vercel-php@0.5.3" }
     },
     "routes": [
+        { "src": "/build/(.*)", "dest": "/public/build/" },
         { "src": "/(.*)", "dest": "/api/index.php" }
     ],
+    "build": {
+    "commands": [
+      "apt-get update && apt-get install -y libssl1.0.0 libssl-dev",
+      "composer install"
+    ]
+  }
     "public": true,
     "buildCommand": "vite build",
     "outputDirectory": "public",
