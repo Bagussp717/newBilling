@@ -1,0 +1,71 @@
+body {
+    background: radial-gradient(circle at 10% 20%, rgba(91, 173, 254, 0.46) 0%, rgba(91, 224, 254, 0.46) 47.2%, rgba(170, 254, 235, 0.43) 90%);
+}
+
+.card {
+    display: flex;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 1;
+    color: #000000;
+    padding: 100px 20px;
+}
+
+.input-custom {
+    border: 1px solid #f7f6f7;
+    background-color: #ffffff;
+    border-radius: 5px;
+    padding: 10px;
+    color: #000000;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.input-custom:focus {
+    border-color: #f7f6f7;
+    background-color: #ffffff;
+    outline: none;
+}
+
+.input-custom-password {
+    border: 1px solid #f7f6f7;
+    background-color: #ffffff;
+    border-radius: 5px;
+    padding: 10px 40px 10px 10px;
+    color: #000000;
+    width: 100%;
+    box-sizing: border-box;
+    position: relative;
+}
+
+.password-toggle {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(20%);
+    cursor: pointer;
+    color: #000;
+    font-size: 20px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+}
+
+.card-img-left {
+    width: 60%;
+    background: center url('../assets/images/login/monitoring.svg') no-repeat;
+    background-size: contain;
+}
+
+.card-content {
+    flex: 1;
+    padding: 100px;
+    color: #000000;
+}
+
+
+@media screen and (max-width: 768px) {
+    .card {
+        padding: 0px;
+    }
+}
