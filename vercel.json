@@ -1,17 +1,16 @@
 {
-    "version": 2,
-    "framework": null,
-    "functions": {
-        "api/index.php": { "runtime": "vercel-php@0.5.3" }
-    },
-    "routes": [
-        { "src": "/build/(.*)", "dest": "/public/build/" },
-        { "src": "/(.*)", "dest": "/api/index.php" }
-    ],
-    "public": true,
-    "buildCommand": "vite build",
-    "outputDirectory": "public",
-     "env": {
+  "version": 2,
+  "framework": null,
+  "functions": {
+    "api/index.php": { "runtime": "vercel-php@0.5.3" }
+  },
+  "routes": [
+    { "src": "/(.*)", "dest": "/api/index.php" }
+  ],
+  "public": true,
+  "buildCommand": "composer install && php artisan config:cache && php artisan route:cache && vite build",
+  "outputDirectory": "public",
+  "env": {
     "APP_NAME": "Laravel",
     "APP_ENV": "local",
     "APP_KEY": "base64:YIyliQKc+oMwG8IQ2s6gYJomRwCyzkNs1iP5ZO2n6Os=",
@@ -26,10 +25,7 @@
     "VIEW_COMPILED_PATH": "/tmp",
 
     "CACHE_DRIVER": "file",
-
     "LOG_CHANNEL": "daily",
-    "LOG_DEPRECATIONS_CHANNEL": "null",
-    "LOG_LEVEL": "debug",
     "LOG_PATH": "/tmp/laravel.log",
 
     "DB_CONNECTION": "mysql",
@@ -40,13 +36,9 @@
     "DB_PASSWORD": "qs5uYeUGI97e6XogL54h",
 
     "BROADCAST_DRIVER": "log",
-
     "FILESYSTEM_DISK": "local",
-
     "QUEUE_CONNECTION": "sync",
-
     "SESSION_DRIVER": "file",
-    "SESSION_LIFETIME": "120",
     "SESSION_FILE_PATH": "/tmp",
 
     "REDIS_HOST": "127.0.0.1",
@@ -76,5 +68,4 @@
     "PUSHER_SCHEME": "https",
     "PUSHER_APP_CLUSTER": "mt1"
   }
-      
 }
