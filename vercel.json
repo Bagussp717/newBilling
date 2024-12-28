@@ -1,38 +1,30 @@
 {
-    "version": 2,
-    "framework": null,
-    "functions": {
-      "api/index.php": { "runtime": "vercel-php@0.5.3" }
-    },
-    "routes": [
-      {
-          "src": "/(.*)",
-          "dest": "/api/index.php"
-      }
-  ],
-    "env": {
-      "APP_NAME": "Laravel",
-      "APP_ENV": "production",
-      "APP_KEY": "base64:YIyliQKc+oMwG8IQ2s6gYJomRwCyzkNs1iP5ZO2n6Os=",
-      "APP_DEBUG": "true",
-      "APP_URL": "http://localhost",
-  
-      "APP_CONFIG_CACHE": "/tmp/config.php",
-      "APP_EVENTS_CACHE": "/tmp/events.php",
-      "APP_PACKAGES_CACHE": "/tmp/packages.php",
-      "APP_ROUTES_CACHE": "/tmp/routes.php",
-      "APP_SERVICES_CACHE": "/tmp/services.php",
-      "VIEW_COMPILED_PATH": "/tmp",
-  
-      "CACHE_DRIVER": "array",
-      "LOG_CHANNEL": "stderr",
-      "SESSION_DRIVER": "cookie",
-  
-      "DB_CONNECTION": "mysql",
-      "DB_HOST": "bxgdxdawq8yc366a6o39-mysql.services.clever-cloud.com",
-      "DB_PORT": "3306",
-      "DB_DATABASE": "bxgdxdawq8yc366a6o39",
-      "DB_USERNAME": "ucshtbizjq7m0nap",
-      "DB_PASSWORD": "qs5uYeUGI97e6XogL54h"
+  "version": 2,
+  "builds": [
+    {
+      "src": "Dockerfile",
+      "use": "@vercel/docker"
     }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/index.php"
+    }
+  ],
+  "env": {
+    "APP_NAME": "Laravel",
+    "APP_ENV": "production",
+    "APP_KEY": "base64:YIyliQKc+oMwG8IQ2s6gYJomRwCyzkNs1iP5ZO2n6Os=",
+    "APP_DEBUG": "false",
+    "APP_URL": "http://localhost",
+    "CACHE_DRIVER": "array",
+    "SESSION_DRIVER": "cookie",
+    "DB_CONNECTION": "mysql",
+    "DB_HOST": "bxgdxdawq8yc366a6o39-mysql.services.clever-cloud.com",
+    "DB_PORT": "3306",
+    "DB_DATABASE": "bxgdxdawq8yc366a6o39",
+    "DB_USERNAME": "ucshtbizjq7m0nap",
+    "DB_PASSWORD": "qs5uYeUGI97e6XogL54h"
   }
+}
