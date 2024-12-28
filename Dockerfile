@@ -1,19 +1,21 @@
-FROM php:8.0-cli
+# Menggunakan image PHP 8.1
+FROM php:8.1-cli
 
-# Install dependencies
+# Install dependensi sistem yang diperlukan (termasuk Composer dan ekstensi PHP untuk Laravel)
 RUN apt-get update && apt-get install -y \
     libssl-dev \
-    && docker-php-ext-install pdo pdo_mysql
+    curl \
+    git \
+    unzip \
+    && docker-php-ext-install pdo pdo_mysql \
+    && curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-# Install Composer
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-
-# Copy application files
+# Menyalin seluruh aplikasi ke dalam container
 COPY . /app
 WORKDIR /app
 
-# Install application dependencies
+# Install dependensi PHP menggunakan Composer
 RUN composer install --no-dev --optimize-autoloader
 
-# Set the entrypoint
+# Menjalankan server PHP built-in
 CMD ["php", "-S", "0.0.0.0:8000", "-t", "public"]
