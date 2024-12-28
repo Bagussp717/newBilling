@@ -11,30 +11,58 @@ use Illuminate\Support\Facades\Crypt;
 class TiketController extends Controller
 {
     public function index()
-    {
-        $pengaduans = Tiket::with('user', 'pelanggan')
-            ->where('status_tiket', '!=', 'Selesai')
-            ->orderBy('created_at', 'desc')
-            ->get();
-        
-            if (request()->wantsJson()) {
-                return response()->json($pengaduans);
-            }
-        return view('pages.tiket.index', compact('pengaduans'));
+{
+    // Ambil parameter pencarian dari request
+    $search = request()->input('search');
+
+    $pengaduans = Tiket::with('user', 'pelanggan')
+        ->where('status_tiket', '!=', 'Selesai')
+        ->when($search, function ($query, $search) {
+            $query->where(function ($q) use ($search) {
+                // Kondisi pencarian dibungkus dalam subquery
+                $q->whereHas('pelanggan', function ($q) use ($search) {
+                    $q->where('nm_pelanggan', 'like', '%' . $search . '%');
+                })
+                ->orWhere('deskripsi_tiket', 'like', '%' . $search . '%');
+            });
+        })
+        ->orderBy('created_at', 'desc')
+        ->get();
+
+    if (request()->wantsJson()) {
+        return response()->json($pengaduans);
     }
 
-    public function doneindex()
-    {
-        $pengaduans = Tiket::with('user', 'pelanggan')
-            ->where('status_tiket', 'Selesai')
-            ->orderBy('created_at', 'desc')
-            ->get();
+    return view('pages.tiket.index', compact('pengaduans'));
+}
 
-        if (request()->wantsJson()) {
-                return response()->json($pengaduans);
-            }
-        return view('pages.tiket.done_index', compact('pengaduans'));
+
+public function doneindex()
+{
+    $search = request()->input('search');
+
+    $pengaduans = Tiket::with('user', 'pelanggan')
+        ->where('status_tiket', 'Selesai') // Filter utama untuk status 'Selesai'
+        ->when($search, function ($query, $search) {
+            $query->where(function ($q) use ($search) {
+                // Kondisi pencarian dibungkus dalam subquery
+                $q->whereHas('pelanggan', function ($q) use ($search) {
+                    $q->where('nm_pelanggan', 'like', '%' . $search . '%');
+                })
+                ->orWhere('deskripsi_tiket', 'like', '%' . $search . '%');
+            });
+        })
+        ->orderBy('created_at', 'desc')
+        ->get();
+
+    if (request()->wantsJson()) {
+        return response()->json($pengaduans);
     }
+
+    return view('pages.tiket.done_index', compact('pengaduans'));
+}
+
+
 
     public function create(Request $request)
     {

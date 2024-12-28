@@ -15,9 +15,13 @@ class PengaduanController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
+        $search = request()->input('search');
 
         $pengaduans = Tiket::with('user', 'pelanggan')
             ->where('kd_user', $user->id) 
+            ->when($search, function ($query, $search) {
+                $query->Where('deskripsi_tiket', 'like', '%' . $search . '%'); // Filter deskripsi_tiket
+            })
             ->orderBy('created_at', 'desc')
             ->get();
 

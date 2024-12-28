@@ -81,115 +81,133 @@ class LoketPembayaranController extends Controller
     }
 
     public function search(Request $request)
-    {
-        $request->validate([
-            'tgl_invoice' => 'required',
-        ], [
-            'tgl_invoice.required' => 'Tanggal invoice harus diisi.',
-        ]);
-        
-        $kd_loket = $request->input('kd_loket');
-        $decryptedId = Crypt::decryptString($kd_loket);
-        $tgl_invoice = $request->input('tgl_invoice');
+{
+    $request->validate([
+        'tgl_invoice' => 'required',
+    ], [
+        'tgl_invoice.required' => 'Tanggal invoice harus diisi.',
+    ]);
     
-        session(['kd_loket' => $decryptedId]);
-    
-        $komisi = Loket::where('kd_loket', $decryptedId)->first();
-    
-        $request->session()->put('kd_loket', $decryptedId);
-    
-        // Temukan loket dengan kondisi search
-        $loket = Loket::with(['invoice.pembayaran' => function ($query) {
-            $query->whereNotNull('jml_bayar');
-        }])->where('kd_loket', $decryptedId)->first();
-    
-        if (!$loket) {
-            // Jika tidak ditemukan, kembalikan ke view dengan pesan error atau data default
-            return response()->json(['error' => 'Loket tidak ditemukan.'], 404);
-        }
-    
-        // Filter invoice berdasarkan tanggal jika ada
-        $invoices = $loket->invoice;
-    
-        if ($tgl_invoice) {
-            $invoices = $invoices->where('tgl_invoice', $tgl_invoice);
-        }
-    
-        // Ambil tanggal invoice dan akhir untuk dropdown
-        $invoiceDates = $loket->invoice->pluck('tgl_invoice')->unique();
-    
-        // Inisialisasi total pelanggan dan array untuk menyimpan pelanggan lunas
-        $totalPelanggan = 0;
-        $pelangganLunas = []; // Array untuk menyimpan pelanggan yang sudah lunas
-    
-        $loket->invoice->each(function ($invoice) use ($tgl_invoice, &$totalPelanggan, &$pelangganLunas) {
-            if ($invoice->tgl_invoice == $tgl_invoice) {
-                // Dapatkan pelanggan terkait dengan invoice ini
-                $pelanggan = $invoice->pelanggan;
-    
-                // Cek apakah pelanggan ada dan memiliki paket
-                if ($pelanggan && $pelanggan->paket) {
-                    // Ambil harga paket
-                    $hargaPaket = $pelanggan->paket->hrg_paket;
-    
-                    // Hitung total pembayaran dari semua pembayaran di invoice
-                    $totalPembayaran = $invoice->pembayaran->sum('jml_bayar');
-    
-                    // Cek apakah total pembayaran sama dengan harga paket (artinya lunas)
-                    if ($totalPembayaran == $hargaPaket && $hargaPaket > 0) {
-                        $totalPelanggan++; // Tambah ke total pelanggan jika lunas
-                        $pelangganLunas[] = $pelanggan->nm_pelanggan; // Tambah pelanggan ke array pelanggan lunas
-                    }
+    $kd_loket = $request->input('kd_loket');
+    $decryptedId = Crypt::decryptString($kd_loket);
+    $tgl_invoice = $request->input('tgl_invoice');
+
+    session(['kd_loket' => $decryptedId]);
+
+    $komisi = Loket::where('kd_loket', $decryptedId)->first();
+
+    $request->session()->put('kd_loket', $decryptedId);
+
+    // Temukan loket dengan kondisi search
+    $loket = Loket::with(['invoice.pembayaran' => function ($query) {
+        $query->whereNotNull('jml_bayar');
+    }])->where('kd_loket', $decryptedId)->first();
+
+    if (!$loket) {
+        // Jika tidak ditemukan, kembalikan ke view dengan pesan error atau data default
+        return response()->json(['error' => 'Loket tidak ditemukan.'], 404);
+    }
+
+    // Filter invoice berdasarkan tanggal jika ada
+    $invoices = $loket->invoice;
+
+    if ($tgl_invoice) {
+        $invoices = $invoices->where('tgl_invoice', $tgl_invoice);
+    }
+
+    // Tambahkan fitur paginasi
+    $perPage = $request->query('per_page', 10); // Default 10 item per halaman
+    $currentPage = $request->query('page', 1); // Default halaman pertama
+    $paginatedInvoices = $invoices->forPage($currentPage, $perPage)->values();
+
+    // Ambil tanggal invoice dan akhir untuk dropdown
+    $invoiceDates = $loket->invoice->pluck('tgl_invoice')->unique();
+
+    // Inisialisasi total pelanggan dan array untuk menyimpan pelanggan lunas
+    $totalPelanggan = 0;
+    $pelangganLunas = []; // Array untuk menyimpan pelanggan yang sudah lunas
+
+    $loket->invoice->each(function ($invoice) use ($tgl_invoice, &$totalPelanggan, &$pelangganLunas) {
+        if ($invoice->tgl_invoice == $tgl_invoice) {
+            // Dapatkan pelanggan terkait dengan invoice ini
+            $pelanggan = $invoice->pelanggan;
+
+            // Cek apakah pelanggan ada dan memiliki paket
+            if ($pelanggan && $pelanggan->paket) {
+                // Ambil harga paket
+                $hargaPaket = $pelanggan->paket->hrg_paket;
+
+                // Hitung total pembayaran dari semua pembayaran di invoice
+                $totalPembayaran = $invoice->pembayaran->sum('jml_bayar');
+
+                // Cek apakah total pembayaran sama dengan harga paket (artinya lunas)
+                if ($totalPembayaran == $hargaPaket && $hargaPaket > 0) {
+                    $totalPelanggan++; // Tambah ke total pelanggan jika lunas
+                    $pelangganLunas[] = $pelanggan->nm_pelanggan; // Tambah pelanggan ke array pelanggan lunas
                 }
             }
-        });
-    
-        // Hitung total bayar berdasarkan pembayaran yang ada pada tgl_invoice yang dipilih
-        $totalBayar = $loket->invoice->sum(function ($invoice) use ($tgl_invoice) {
-            if ($invoice->tgl_invoice == $tgl_invoice) {
-                if ($invoice->pembayaran->count() > 0) {
-                    return $invoice->pembayaran->sum('jml_bayar');
-                } else {
-                    return 0;
-                }
+        }
+    });
+
+    // Hitung total bayar berdasarkan pembayaran yang ada pada tgl_invoice yang dipilih
+    $totalBayar = $loket->invoice->sum(function ($invoice) use ($tgl_invoice) {
+        if ($invoice->tgl_invoice == $tgl_invoice) {
+            if ($invoice->pembayaran->count() > 0) {
+                return $invoice->pembayaran->sum('jml_bayar');
             } else {
-                return 0; // Menjumlahkan semua pembayaran pada semua tanggal
+                return 0;
             }
-        });
-    
-        // Tentukan apakah komisi fixed atau dynamic berdasarkan kolom jenis_komisi
-        if ($komisi->jenis_komisi === 'fixed') {
-            $jml_komisi = $komisi->jml_komisi;
-        } elseif ($komisi->jenis_komisi === 'dynamic') {
-            $jml_komisi = $komisi->jml_komisi * $totalPelanggan;
         } else {
-            $jml_komisi = 0; // Default ke 0 jika jenis komisi tidak diketahui
+            return 0; // Menjumlahkan semua pembayaran pada semua tanggal
         }
-    
-        // Cek apakah permintaan ingin hasil dalam format JSON
-        if ($request->wantsJson()) {
+    });
+
+    // Tentukan apakah komisi fixed atau dynamic berdasarkan kolom jenis_komisi
+    if ($komisi->jenis_komisi === 'fixed') {
+        $jml_komisi = $komisi->jml_komisi;
+    } elseif ($komisi->jenis_komisi === 'dynamic') {
+        $jml_komisi = $komisi->jml_komisi * $totalPelanggan;
+    } else {
+        $jml_komisi = 0; // Default ke 0 jika jenis komisi tidak diketahui
+    }
+
+    // Cek apakah permintaan ingin hasil dalam format JSON
+    if ($request->wantsJson()) {
+        if ($request->has('home')) {
+            // Jika ada parameter 'home', hanya tampilkan 'jml_komisi' dan 'totalBayar'
             return response()->json([
-            'loket' => $loket,
-            'invoices' => $invoices,
-            'invoiceDates' => $invoiceDates,
-            'kd_loket' => $kd_loket,
-            'jml_komisi' => $jml_komisi,
-            'totalBayar' => $totalBayar,
-            'tgl_invoice' => $tgl_invoice,
+                'jml_komisi' => $jml_komisi,
+                'totalBayar' => $totalBayar,
             ]);
         }
-    
-        // Tampilkan hasil ke view jika tidak dalam permintaan JSON
-        return view('pages.loketpembayaran.show', [
-            'loket' => $loket,
-            'invoices' => $invoices,
+
+        // Jika tidak, tampilkan semua data
+        return response()->json([
+            'invoices' => [
+                'data' => $paginatedInvoices,
+                'current_page' => (int)$currentPage,
+                'per_page' => (int)$perPage,
+                'total' => $invoices->count(),
+            ],
             'invoiceDates' => $invoiceDates,
             'kd_loket' => $kd_loket,
             'jml_komisi' => $jml_komisi,
             'totalBayar' => $totalBayar,
-            'tgl_invoice' => $tgl_invoice,
         ]);
     }
+
+    // Tampilkan hasil ke view jika tidak dalam permintaan JSON
+    return view('pages.loketpembayaran.show', [
+        'loket' => $loket,
+        'invoices' => $invoices,
+        'invoiceDates' => $invoiceDates,
+        'kd_loket' => $kd_loket,
+        'jml_komisi' => $jml_komisi,
+        'totalBayar' => $totalBayar,
+        'tgl_invoice' => $tgl_invoice,
+    ]);
+}
+
     
 
     public function cetakDaftarTagihan($kd_loket, $tgl_invoice)
